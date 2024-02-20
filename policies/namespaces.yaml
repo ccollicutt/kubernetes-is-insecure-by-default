@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-step-1
+  labels:
+    secure: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: insecure

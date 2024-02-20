@@ -1,0 +1,36 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-restricted-psa-to-namespaces
+spec:
+  background: true
+  rules:
+  - name: label-namespace-restricted
+    match:
+      resources:
+        kinds:
+        - Namespace
+    exclude:
+      any:
+      resources:
+        namespaces:
+        - calico-apiserver
+        - calico-system
+        - default
+        - kube-node-lease
+        - kube-public
+        - kube-system
+        - kyverno
+        - tigera-operator
+        - falco
+        - insecure
+    # preconditions:
+    #   all:
+    #   - key: "{{ request.object.metadata.labels.secure }}"
+    #     operator: Equals
+    #     value: "true"
+    mutate:
+      patchStrategicMerge:
+        metadata:
+          labels:
+            pod-security.kubernetes.io/enforce: "restricted"

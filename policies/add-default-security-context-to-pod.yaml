@@ -1,0 +1,67 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-default-security-context-to-pods
+spec:
+  background: true
+  validationFailureAction: Enforce
+  rules:
+    - name: securitycontext-allowPrivilegeEscalation
+      match:
+        any:
+        resources:
+          kinds:
+            - Pod
+      exclude:
+        any:
+        resources:
+          namespaces:
+          - calico-apiserver
+          - calico-system
+          - default
+          - kube-node-lease
+          - kube-public
+          - kube-system
+          - kyverno
+          - tigera-operator
+          - falco
+          - insecure
+      mutate:
+        foreach:
+          - list: "request.object.spec.containers"
+            patchStrategicMerge:
+              spec:
+                containers:
+                - name: "{{ element.name }}"
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    runAsNonRoot: true
+                    capabilities:
+                      drop:
+                      - ALL
+    - name: securitycontext-seccompProfile
+      match:
+        any:
+        resources:
+          kinds:
+            - Pod
+      exclude:
+        any:
+        resources:
+          namespaces:
+          - calico-apiserver
+          - calico-system
+          - default
+          - kube-node-lease
+          - kube-public
+          - kube-system
+          - kyverno
+          - tigera-operator
+          - falco
+          - insecure
+      mutate:
+        patchStrategicMerge:
+          spec:
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
